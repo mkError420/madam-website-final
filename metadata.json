@@ -1,0 +1,6 @@
+{
+  "name": "Aria Vance",
+  "description": "An elegant, minimalist multi-page portfolio website for singer-songwriter Aria Vance, featuring audio streaming, event calendar, photo gallery, biography, and newsletter subscription form.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
