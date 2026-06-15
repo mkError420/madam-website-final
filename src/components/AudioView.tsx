@@ -4,19 +4,31 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Disc, Share2, Volume2, ListMusic, Music, Heart, Star, ExternalLink, HelpCircle } from 'lucide-react';
+import { Play, Pause, Disc, Share2, Volume2, ListMusic, Music, Heart, Star, ExternalLink, HelpCircle, Volume, Volume1, VolumeX } from 'lucide-react';
 import { Track } from '../types';
-import { getAnalyser } from '../utils/synth';
 
 interface AudioViewProps {
   albums: any[];
   categories: string[];
   activeTrackId: string | null;
+  isPlaying: boolean;
   onPlayTrack: (trackId: string) => void;
   onPauseTrack: () => void;
+  getPlayerAnalyser: () => AnalyserNode | null;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  onSeek: (time: number) => void;
+  onVolumeChange: (volume: number) => void;
 }
 
-export default function AudioView({ albums, categories, activeTrackId, onPlayTrack, onPauseTrack }: AudioViewProps) {
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+};
+
+export default function AudioView({ albums, categories, activeTrackId, isPlaying, onPlayTrack, onPauseTrack, getPlayerAnalyser, currentTime, duration, volume, onSeek, onVolumeChange }: AudioViewProps) {
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [lyricsTrack, setLyricsTrack] = useState<Track | null>(null);
@@ -71,9 +83,9 @@ export default function AudioView({ albums, categories, activeTrackId, onPlayTra
       const height = canvas.height;
       ctx.clearRect(0, 0, width, height);
 
-      const analyserNode = getAnalyser();
+      const analyserNode = getPlayerAnalyser();
       
-      if (activeTrackId && analyserNode) {
+      if (isPlaying && activeTrackId && analyserNode) {
         // Draw real frequency / wave visualizer
         const bufferLength = analyserNode.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
@@ -177,63 +189,88 @@ export default function AudioView({ albums, categories, activeTrackId, onPlayTra
       </div>
 
       {/* 2. Global Synthesized Player Canvas Widget */}
-      <div className="bg-[#050505] border border-white/10 rounded-none p-6 sm:p-8 backdrop-blur-md" id="audio-master-player">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
-          {/* Metadata */}
-          <div className="lg:col-span-4 flex items-center space-x-5 text-left">
-            <div className={`p-4 rounded-full bg-black border border-white/10 ${activeTrackId ? 'animate-[spin_20s_linear_infinite]' : ''}`}>
-              <Disc className="h-10 w-10 text-white/60 animate-pulse" />
+      <div className="bg-[#050505] border border-white/10 rounded-none p-6 sm:p-8 backdrop-blur-md space-y-5" id="audio-master-player">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center space-x-4 text-left w-full sm:w-1/3">
+            <div className={`p-3 rounded-full bg-black border border-white/10 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''}`}>
+              <Disc className="h-8 w-8 text-white/60" />
             </div>
-            <div>
+            <div className="min-w-0">
               {activeTrack ? (
-                <>
-                  <p className="text-white text-sm font-semibold tracking-widest uppercase">{activeTrack.title}</p>
-                  <p className="text-white/40 text-[10px] font-mono uppercase tracking-wider mt-1">Synthesizing live: key mapped tone</p>
-                </>
+                <p className="text-white text-sm font-semibold tracking-widest uppercase truncate">{activeTrack.title}</p>
               ) : (
-                <>
-                  <p className="text-white/50 text-sm font-medium">No track currently auditing</p>
-                  <p className="text-white/30 text-[10px] font-mono uppercase tracking-wider mt-1">Select a song from tracklists below</p>
-                </>
+                <p className="text-white/50 text-sm font-medium">Player Idle</p>
               )}
+              <p className="text-white/40 text-[10px] font-mono uppercase tracking-wider mt-1">
+                {activeTrack ? (isPlaying ? 'Now Playing' : 'Paused') : 'Select a track'}
+              </p>
             </div>
           </div>
 
-          {/* Real-time Oscillating Canvas */}
-          <div className="lg:col-span-5 h-20 bg-black/40 rounded-none border border-white/10 overflow-hidden relative">
-            <canvas ref={canvasRef} width={500} height={80} className="w-full h-full block" />
-            <span className="absolute bottom-1 right-2 font-mono text-[8px] uppercase tracking-wider text-white/25">
-              {activeTrackId ? 'Stereo Wave signal analyzer' : 'Idle pulse'}
-            </span>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              disabled={!activeTrackId}
+              onClick={isPlaying ? onPauseTrack : () => onPlayTrack(activeTrackId!)}
+              className="p-4 bg-white text-black rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+            </button>
           </div>
 
-          {/* Quick Controls */}
-          <div className="lg:col-span-3 flex items-center justify-center lg:justify-end space-x-6">
-            {activeTrackId ? (
-              <button
-                id="master-player-pause"
-                onClick={onPauseTrack}
-                className="px-6 py-3.5 border border-white/30 hover:border-white text-white hover:bg-white/5 cursor-pointer text-[10px] font-mono uppercase font-semibold rounded-none active:scale-95 transition-all flex items-center space-x-2"
-              >
-                <Pause className="h-4 w-4" />
-                <span>Pause stream</span>
+          <div className="w-full sm:w-1/3 flex items-center justify-end space-x-3">
+            <div className="h-12 w-full max-w-[150px] bg-black/40 rounded-none border border-white/10 overflow-hidden relative hidden md:block">
+              <canvas ref={canvasRef} width={150} height={48} className="w-full h-full block" />
+              <span className="absolute bottom-0.5 right-1.5 font-mono text-[7px] uppercase text-white/20">
+                {isPlaying ? 'SIGNAL' : 'IDLE'}
+              </span>
+            </div>
+            <div className="group flex items-center space-x-2">
+              <button onClick={() => onVolumeChange(volume > 0 ? 0 : 0.5)}>
+                {volume === 0 ? <VolumeX className="h-4 w-4 text-white/50"/> : volume < 0.5 ? <Volume1 className="h-4 w-4 text-white/50"/> : <Volume2 className="h-4 w-4 text-white/50"/>}
               </button>
-            ) : (
-              <button
-                id="master-player-play-default"
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={(e) => onVolumeChange(Number(e.target.value))}
+                className="w-0 group-hover:w-20 h-1 bg-white/20 rounded-full appearance-none cursor-pointer transition-all duration-300 accent-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 pt-2">
+          <span className="font-mono text-[10px] text-white/40 w-10 text-right">{formatTime(currentTime)}</span>
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            value={currentTime}
+            onInput={(e) => onSeek(Number(e.currentTarget.value))}
+            disabled={!activeTrackId}
+            className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-white disabled:cursor-not-allowed"
+          />
+          <span className="font-mono text-[10px] text-white/40 w-10 text-left">{formatTime(duration)}</span>
+        </div>
+
+        {!activeTrackId ? (
+          <div className="text-center pt-2">
+            <button
                 onClick={() => onPlayTrack(albums.length > 0 && albums[0].tracks ? albums[0].tracks[0].id : '')}
                 disabled={albums.length === 0}
-                className="px-6 py-3.5 bg-white text-neutral-950 hover:bg-neutral-200 cursor-pointer text-[10px] font-mono uppercase font-semibold rounded-none active:scale-95 transition-all flex items-center space-x-2 disabled:opacity-50"
+                className="px-4 py-2 bg-white/10 text-white/80 hover:bg-white/20 cursor-pointer text-[9px] font-mono uppercase font-semibold rounded-none transition-all flex items-center space-x-2 mx-auto disabled:opacity-50"
               >
-                <Play className="h-4 w-4 fill-current ml-0.5" />
-                <span>audition default</span>
+                <Play className="h-3 w-3 fill-current" />
+                <span>Audition Default Track</span>
               </button>
-            )}
           </div>
-
+            ) : (
+              <div className="h-8" />
+            )
+        }
         </div>
-      </div>
 
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-2 items-center border-b border-white/10 pb-4" id="audio-filters">
@@ -351,6 +388,7 @@ export default function AudioView({ albums, categories, activeTrackId, onPlayTra
 
             <div className="divide-y divide-white/5 bg-black/10" id="tracks-table-body">
               {selectedAlbum.tracks.map((track, index) => {
+                const isSelectedAndPlaying = isPlaying && activeTrackId === track.id;
                 const isSelected = activeTrackId === track.id;
                 const isFavorite = favoriteTracks.includes(track.id);
                 return (
@@ -363,7 +401,7 @@ export default function AudioView({ albums, categories, activeTrackId, onPlayTra
                   >
                     {/* Index or active sound icon */}
                     <div className="col-span-1 text-center font-mono text-sm text-white/45">
-                      {isSelected ? (
+                      {isSelectedAndPlaying ? (
                         <div className="inline-flex space-x-0.5 items-end h-3">
                           <span className="w-[2px] h-3 bg-white animate-[bounce_1s_infinite_100ms] rounded-full" />
                           <span className="w-[2px] h-2.5 bg-white animate-[bounce_1s_infinite_400ms] rounded-full" />
@@ -408,13 +446,13 @@ export default function AudioView({ albums, categories, activeTrackId, onPlayTra
 
                       <button
                         id={`track-play-toggle-${track.id}`}
-                        onClick={() => isSelected ? onPauseTrack() : onPlayTrack(track.id)}
+                        onClick={() => isSelectedAndPlaying ? onPauseTrack() : onPlayTrack(track.id)}
                         className={`p-2 rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all ${
-                          isSelected ? 'bg-white text-black' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                          isSelectedAndPlaying ? 'bg-white text-black' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
                         }`}
-                        title={isSelected ? 'Pause' : 'Play Audition'}
+                        title={isSelectedAndPlaying ? 'Pause' : 'Play Audition'}
                       >
-                        {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
+                        {isSelectedAndPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
                       </button>
                     </div>
                   </div>

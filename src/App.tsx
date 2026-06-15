@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Disc, Heart, Mail, Compass, HelpCircle, AlertCircle, ArrowUp } from 'lucide-react';
 
@@ -44,9 +44,6 @@ import {
   deleteTrackFromAlbum,
 } from './utils/store';
 
-// Imports of real-time audio synthesis
-import { playSynth, stopSynth, getPlayingTrackId } from './utils/synth';
-
 import { Subscriber, ContactMessage, TourEvent, RSVP, Video, GalleryItem } from './types';
 
 export default function App() {
@@ -61,6 +58,16 @@ export default function App() {
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [showAdminBadge, setShowAdminBadge] = useState<boolean>(true);
   
+  // Audio Player State
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+
   // Back-to-top button state
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -98,20 +105,60 @@ export default function App() {
 
   // Stop synthesizer plays on complete component unmount
   useEffect(() => {
+    const audio = audioRef.current;
+    const handleEnded = () => {
+      setIsPlaying(false);
+      // Optional: play next track
+    };
+    audio?.addEventListener('ended', handleEnded);
     return () => {
-      stopSynth();
+      audio?.removeEventListener('ended', handleEnded);
     };
   }, []);
 
   // 1. Audio controls
+  const getPlayerAnalyser = () => analyserRef.current;
+
   const handlePlayTrack = (trackId: string) => {
-    playSynth(trackId);
-    setActiveTrackId(trackId);
+    if (!audioRef.current) return;
+
+    if (!audioContextRef.current) {
+      const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 256;
+      const source = context.createMediaElementSource(audioRef.current);
+      source.connect(analyser);
+      analyser.connect(context.destination);
+      audioContextRef.current = context;
+      analyserRef.current = analyser;
+      sourceRef.current = source;
+    }
+
+    if (trackId === activeTrackId) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    } else {
+      const allTracks = albums.flatMap(a => a.tracks || []);
+      const trackToPlay = allTracks.find(t => t.id === trackId);
+      if (trackToPlay && trackToPlay.audioUrl && trackToPlay.audioUrl !== '#') {
+        audioRef.current.src = trackToPlay.audioUrl;
+        setActiveTrackId(trackId);
+        audioRef.current.play().then(() => setIsPlaying(true));
+      }
+    }
   };
 
   const handlePauseTrack = () => {
-    stopSynth();
-    setActiveTrackId(null);
+    audioRef.current?.pause();
+    setIsPlaying(false);
+  };
+
+  const handleSeek = (time: number) => {
+    if (audioRef.current) audioRef.current.currentTime = time;
+  };
+
+  const handleVolumeChange = (vol: number) => {
+    if (audioRef.current) audioRef.current.volume = vol;
   };
 
   // 2. Newsletter subscribers control
@@ -164,6 +211,7 @@ export default function App() {
             videos={videos}
             onNavigate={handleNavigateTab}
             activeTrackId={activeTrackId}
+            isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
             onPauseTrack={handlePauseTrack}
             onSubscribeNewsletter={handleSubscribeNewsletter}
@@ -177,8 +225,15 @@ export default function App() {
             albums={albums}
             categories={audioCategories}
             activeTrackId={activeTrackId}
+            isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
             onPauseTrack={handlePauseTrack}
+            getPlayerAnalyser={getPlayerAnalyser}
+            currentTime={currentTime}
+            duration={duration}
+            volume={volume}
+            onSeek={handleSeek}
+            onVolumeChange={handleVolumeChange}
           />
         );
       case 'videos':
@@ -228,6 +283,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col justify-between overflow-x-hidden font-sans">
+      <audio 
+        ref={audioRef}
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+        onLoadedData={(e) => setDuration(e.currentTarget.duration)}
+        onVolumeChange={(e) => setVolume(e.currentTarget.volume)}
+        crossOrigin="anonymous"
+      />
       
       {/* Dynamic Header Navbar navigation */}
       <Navigation 

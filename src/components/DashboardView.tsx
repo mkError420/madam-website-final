@@ -64,6 +64,7 @@ export default function DashboardView({
   const [trAlbumId, setTrAlbumId] = useState('');
   const [trTitle, setTrTitle] = useState('');
   const [trDuration, setTrDuration] = useState('');
+  const [trAudioUrl, setTrAudioUrl] = useState('');
 
   // Video states
   const [vidTitle, setVidTitle] = useState('');
@@ -360,14 +361,17 @@ export default function DashboardView({
             {/* Add Track Form */}
             <div className="bg-black/40 border border-white/10 p-6 space-y-4">
               <h3 className="font-sans text-sm font-light uppercase tracking-widest text-white">Append Track to Release</h3>
-              <form onSubmit={e => { e.preventDefault(); if(trAlbumId) onAddTrack(trAlbumId, { title: trTitle, duration: trDuration, audioUrl: '#' }); setTrTitle(''); setTrDuration(''); }} className="grid grid-cols-1 sm:grid-cols-4 gap-2 font-mono text-xs">
-                <select value={trAlbumId} onChange={e => setTrAlbumId(e.target.value)} required className="col-span-1 sm:col-span-1 p-2 bg-black border border-white/10 text-white cursor-pointer outline-none">
-                  <option value="">Select Album...</option>
-                  {albums.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
-                </select>
-                <input placeholder="Track Title" value={trTitle} onChange={e => setTrTitle(e.target.value)} required className="col-span-1 sm:col-span-2 p-2 bg-black border border-white/10 text-white outline-none focus:border-white/30" />
-                <input placeholder="Duration (e.g. 03:45)" value={trDuration} onChange={e => setTrDuration(e.target.value)} required className="col-span-1 sm:col-span-1 p-2 bg-black border border-white/10 text-white outline-none focus:border-white/30" />
-                <button type="submit" className="col-span-1 sm:col-span-4 mt-2 px-3 py-2 bg-white/10 text-white border border-white/20 uppercase tracking-widest hover:bg-white hover:text-black transition-colors cursor-pointer">Add Track</button>
+              <form onSubmit={e => { e.preventDefault(); if(trAlbumId) { onAddTrack(trAlbumId, { title: trTitle, duration: trDuration, audioUrl: trAudioUrl }); setTrTitle(''); setTrDuration(''); setTrAudioUrl(''); } }} className="space-y-3 font-mono text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <select value={trAlbumId} onChange={e => setTrAlbumId(e.target.value)} required className="p-2.5 bg-black border border-white/10 text-white cursor-pointer outline-none">
+                    <option value="">Select Album...</option>
+                    {albums.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
+                  </select>
+                  <input placeholder="Track Title" value={trTitle} onChange={e => setTrTitle(e.target.value)} required className="p-2.5 bg-black border border-white/10 text-white outline-none focus:border-white/30" />
+                  <input placeholder="Duration (e.g. 03:45)" value={trDuration} onChange={e => setTrDuration(e.target.value)} required className="p-2.5 bg-black border border-white/10 text-white outline-none focus:border-white/30" />
+                </div>
+                <input placeholder="Audio File URL (e.g. https://.../track.mp3)" value={trAudioUrl} onChange={e => setTrAudioUrl(e.target.value)} required className="w-full p-2.5 bg-black border border-white/10 text-white outline-none focus:border-white/30" />
+                <button type="submit" className="w-full mt-1 px-3 py-2.5 bg-white/10 text-white border border-white/20 uppercase tracking-widest hover:bg-white hover:text-black transition-colors cursor-pointer">Add Track</button>
               </form>
             </div>
 

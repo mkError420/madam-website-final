@@ -14,6 +14,7 @@ interface HomeViewProps {
   videos: VideoType[];
   onNavigate: (tab: string) => void;
   activeTrackId: string | null;
+  isPlaying: boolean;
   onPlayTrack: (trackId: string) => void;
   onPauseTrack: () => void;
   onSubscribeNewsletter: (email: string) => Promise<{ success: boolean; message: string }>;
@@ -24,6 +25,7 @@ export default function HomeView({
   videos,
   onNavigate,
   activeTrackId,
+  isPlaying,
   onPlayTrack,
   onPauseTrack,
   onSubscribeNewsletter
@@ -84,7 +86,7 @@ export default function HomeView({
     }
   };
 
-  const isPlayingFeatured = featuredTrack ? activeTrackId === featuredTrack.id : false;
+  const isPlayingFeatured = isPlaying && featuredTrack ? activeTrackId === featuredTrack.id : false;
 
   return (
     <div className="space-y-24 pb-20">
@@ -266,7 +268,7 @@ export default function HomeView({
               {featuredTracks.length === 0 ? (
                 <p className="text-white/40 text-xs font-mono py-8">No audio tracks available yet.</p>
               ) : featuredTracks.map((track) => {
-                const isSelected = activeTrackId === track.id;
+                const isSelected = isPlaying && activeTrackId === track.id;
                 return (
                   <div
                     key={track.id}
@@ -285,7 +287,7 @@ export default function HomeView({
                         />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all">
                           <button
-                            onClick={() => isSelected ? onPauseTrack() : onPlayTrack(track.id)}
+                            onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
                             className="p-1 rounded-full bg-white text-black cursor-pointer"
                           >
                             {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
@@ -294,7 +296,7 @@ export default function HomeView({
                       </div>
                       
                       <div className="min-w-0">
-                        <p className={`text-sm font-medium tracking-wide uppercase truncate ${isSelected ? 'text-white' : 'text-white/85'}`}>
+                        <p className={`text-sm font-medium tracking-wide uppercase truncate ${activeTrackId === track.id ? 'text-white' : 'text-white/85'}`}>
                           {track.title}
                         </p>
                         <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider mt-0.5 truncate">
@@ -314,7 +316,7 @@ export default function HomeView({
                       
                       <button
                         id={`home-track-play-${track.id}`}
-                        onClick={() => isSelected ? onPauseTrack() : onPlayTrack(track.id)}
+                        onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
                         className={`p-2.5 rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all ${
                           isSelected ? 'bg-white text-black border border-white' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
                         }`}

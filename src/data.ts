@@ -52,11 +52,11 @@ export const ALBUMS: Album[] = [
     coverUrl: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&q=80&w=600",
     description: "Her groundbreaking sophomore album, exploring themes of growth, separation, and find beauty in stillness, wrapped in lush, late-night analog neo-soul arrangement.",
     tracks: [
-      { id: "ss_1", title: "Vesper Hills", duration: "03:45", audioUrl: "vesper_hills", plays: "184,204", lyrics: "Vesper hills in the failing light / Shadows dance across the quiet height / Hold your breath and let the rhythm take / All the promises we couldn't make..." },
-      { id: "ss_2", title: "Rhodes & Rust", duration: "04:12", audioUrl: "rhodes_rust", plays: "142,098", lyrics: "Dust on the keys, vintage gold / Tales that the old Rhodes told / Rust in the gears, warmth in the tone / Singing to the cold stone..." },
-      { id: "ss_3", title: "Subtle Indigo", duration: "03:18", audioUrl: "subtle_indigo", plays: "98,450", lyrics: "Indigo skies on a Tuesday night / Falling inside of a neon light / Speak in a voice that is low and true / Everything circles back to you..." },
-      { id: "ss_4", title: "Chasing the Lows", duration: "04:55", audioUrl: "chasing_the_lows", plays: "76,120", lyrics: "We were chasing the lows, down by the bay / Watching the memories wither away / Minimal bass on a four-on-the-floor / Nobody knocking at the studio door..." },
-      { id: "ss_5", title: "Glass Harbor", duration: "03:32", audioUrl: "glass_harbor", plays: "115,640", lyrics: "Reflections in the glass, high tide rising / Silver linings that are compromising / Docked in the Harbor, safe from the storm / Waiting for the sea breeze to keep us warm..." }
+      { id: "ss_1", title: "Vesper Hills", duration: "03:45", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", plays: "184,204", lyrics: "Vesper hills in the failing light / Shadows dance across the quiet height / Hold your breath and let the rhythm take / All the promises we couldn't make..." },
+      { id: "ss_2", title: "Rhodes & Rust", duration: "04:12", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", plays: "142,098", lyrics: "Dust on the keys, vintage gold / Tales that the old Rhodes told / Rust in the gears, warmth in the tone / Singing to the cold stone..." },
+      { id: "ss_3", title: "Subtle Indigo", duration: "03:18", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", plays: "98,450", lyrics: "Indigo skies on a Tuesday night / Falling inside of a neon light / Speak in a voice that is low and true / Everything circles back to you..." },
+      { id: "ss_4", title: "Chasing the Lows", duration: "04:55", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", plays: "76,120", lyrics: "We were chasing the lows, down by the bay / Watching the memories wither away / Minimal bass on a four-on-the-floor / Nobody knocking at the studio door..." },
+      { id: "ss_5", title: "Glass Harbor", duration: "03:32", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", plays: "115,640", lyrics: "Reflections in the glass, high tide rising / Silver linings that are compromising / Docked in the Harbor, safe from the storm / Waiting for the sea breeze to keep us warm..." }
     ],
     streaming: {
       spotify: "https://open.spotify.com",
@@ -74,9 +74,9 @@ export const ALBUMS: Album[] = [
     coverUrl: "https://images.unsplash.com/photo-1487180142328-0c4e37023af5?auto=format&fit=crop&q=80&w=600",
     description: "Aria's debut EP, recorded live in an old timber cabin. Features raw acoustic guitar, intimate woodwind guest features, and evocative vocal harmonies.",
     tracks: [
-      { id: "qe_1", title: "Timber Hearth", duration: "02:58", audioUrl: "timber_hearth", plays: "312,401", lyrics: "Log by log, feed the flame / Whispering a forgotten name / Cracking spruce and heavy snow / Deep in the woods where the echoes go..." },
-      { id: "qe_2", title: "Silver Pines", duration: "03:24", audioUrl: "silver_pines", plays: "245,391", lyrics: "Silver pines and frozen roots / Walking around in heavy boots / Winter wind is starting to bite / Keep me safe through the frozen night..." },
-      { id: "qe_3", title: "Wind & Wire", duration: "04:02", audioUrl: "wind_and_wire", plays: "189,451", lyrics: "Fingers brushing against the steel / Finding out if the love is real / Wind in the wires, hum on the line / Hoping your heart connects with mine..." }
+      { id: "qe_1", title: "Timber Hearth", duration: "02:58", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", plays: "312,401", lyrics: "Log by log, feed the flame / Whispering a forgotten name / Cracking spruce and heavy snow / Deep in the woods where the echoes go..." },
+      { id: "qe_2", title: "Silver Pines", duration: "03:24", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", plays: "245,391", lyrics: "Silver pines and frozen roots / Walking around in heavy boots / Winter wind is starting to bite / Keep me safe through the frozen night..." },
+      { id: "qe_3", title: "Wind & Wire", duration: "04:02", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", plays: "189,451", lyrics: "Fingers brushing against the steel / Finding out if the love is real / Wind in the wires, hum on the line / Hoping your heart connects with mine..." }
     ],
     streaming: {
       spotify: "https://open.spotify.com",
@@ -92,7 +92,7 @@ export const ALBUMS: Album[] = [
     coverUrl: "https://images.unsplash.com/photo-1446057032654-9d8885b7511a?auto=format&fit=crop&q=80&w=600",
     description: "A standalone break-out single that captured global playlist attention. A moody, atmospheric ballad driven by a solitary cello and acoustic nylon bass.",
     tracks: [
-      { id: "vs_1", title: "Velvet Skies", duration: "03:51", audioUrl: "velvet_skies", plays: "1,204,490", lyrics: "Velvet skies closing down / Over the noise of this velvet town / One more drink, one more sigh / Let the clouds roll across the sky..." }
+      { id: "vs_1", title: "Velvet Skies", duration: "03:51", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3", plays: "1,204,490", lyrics: "Velvet skies closing down / Over the noise of this velvet town / One more drink, one more sigh / Let the clouds roll across the sky..." }
     ],
     streaming: {
       spotify: "https://open.spotify.com",
