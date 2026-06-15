@@ -2,16 +2,16 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
-import { TourEvent, ContactMessage, Subscriber, RSVP } from '../types';
-import { TOUR_DATES, ALBUMS as INITIAL_ALBUMS } from '../data';
+import { TourEvent, ContactMessage, Subscriber, RSVP, Video, GalleryItem } from '../types';
+import { ALBUMS as INITIAL_ALBUMS, VIDEOS as INITIAL_VIDEOS, GALLERY_ITEMS as INITIAL_GALLERY } from '../data';
 
 const SUBSCRIBERS_KEY = 'aria_vance_subscribers';
 const CONTACTS_KEY = 'aria_vance_contacts';
-const EVENTS_KEY = 'aria_vance_events';
 const RSVPS_KEY = 'aria_vance_rsvps';
 const ALBUMS_KEY = 'aria_vance_albums';
 const CATEGORIES_KEY = 'aria_vance_audio_categories';
+const VIDEOS_KEY = 'aria_vance_videos';
+const GALLERY_KEY = 'aria_vance_gallery';
 
 // Initialize with healthy, elegant default data
 const DEFAULT_SUBSCRIBERS: Subscriber[] = [
@@ -120,42 +120,6 @@ export const deleteContactMessage = (id: string): ContactMessage[] => {
   return updated;
 };
 
-export const getEvents = (): TourEvent[] => {
-  const data = localStorage.getItem(EVENTS_KEY);
-  if (!data) {
-    localStorage.setItem(EVENTS_KEY, JSON.stringify(TOUR_DATES));
-    return TOUR_DATES;
-  }
-  return JSON.parse(data);
-};
-
-export const addEvent = (eventData: Omit<TourEvent, 'id'>): TourEvent => {
-  const events = getEvents();
-  const newEvent: TourEvent = {
-    ...eventData,
-    id: `tour_${Date.now()}`
-  };
-  
-  // Sort chronologically
-  const updated = [...events, newEvent].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(updated));
-  return newEvent;
-};
-
-export const updateEventStatus = (id: string, status: TourEvent['status']): TourEvent[] => {
-  const events = getEvents();
-  const updated = events.map(e => e.id === id ? { ...e, status } : e);
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(updated));
-  return updated;
-};
-
-export const deleteEvent = (id: string): TourEvent[] => {
-  const events = getEvents();
-  const updated = events.filter(e => e.id !== id);
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(updated));
-  return updated;
-};
-
 export const getRSVPs = (): RSVP[] => {
   const data = localStorage.getItem(RSVPS_KEY);
   if (!data) {
@@ -226,5 +190,99 @@ export const updateAlbumCategory = (id: string, category: string): any[] => {
   const albums = getAlbums();
   const updated = albums.map(a => a.id === id ? { ...a, category } : a);
   localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const addAlbum = (albumData: any): any[] => {
+  const albums = getAlbums();
+  const newAlbum = { 
+    ...albumData, 
+    id: `album_${Date.now()}`, 
+    tracks: [],
+    streaming: {
+      spotify: "#",
+      appleMusic: "#"
+    } 
+  };
+  const updated = [newAlbum, ...albums];
+  localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteAlbum = (id: string): any[] => {
+  const updated = getAlbums().filter(a => a.id !== id);
+  localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const addTrackToAlbum = (albumId: string, trackData: any): any[] => {
+  const albums = getAlbums();
+  const updated = albums.map(a => {
+    if (a.id === albumId) {
+      return {
+        ...a,
+        tracks: [...(a.tracks || []), { ...trackData, id: `tr_${Date.now()}`, plays: "0", lyrics: "No lyrics available for this track." }]
+      };
+    }
+    return a;
+  });
+  localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteTrackFromAlbum = (albumId: string, trackId: string): any[] => {
+  const albums = getAlbums();
+  const updated = albums.map(a => {
+    if (a.id === albumId) {
+      return {
+        ...a,
+        tracks: a.tracks.filter((t: any) => t.id !== trackId)
+      };
+    }
+    return a;
+  });
+  localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const getVideos = (): Video[] => {
+  const data = localStorage.getItem(VIDEOS_KEY);
+  if (!data) {
+    localStorage.setItem(VIDEOS_KEY, JSON.stringify(INITIAL_VIDEOS));
+    return INITIAL_VIDEOS;
+  }
+  return JSON.parse(data);
+};
+
+export const addVideo = (videoData: Omit<Video, 'id'>): Video[] => {
+  const updated = [{ ...videoData, id: `vid_${Date.now()}` }, ...getVideos()];
+  localStorage.setItem(VIDEOS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteVideo = (id: string): Video[] => {
+  const updated = getVideos().filter(v => v.id !== id);
+  localStorage.setItem(VIDEOS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const getGalleryItems = (): GalleryItem[] => {
+  const data = localStorage.getItem(GALLERY_KEY);
+  if (!data) {
+    localStorage.setItem(GALLERY_KEY, JSON.stringify(INITIAL_GALLERY));
+    return INITIAL_GALLERY;
+  }
+  return JSON.parse(data);
+};
+
+export const addGalleryItem = (itemData: Omit<GalleryItem, 'id'>): GalleryItem[] => {
+  const updated = [{ ...itemData, id: `gal_${Date.now()}` }, ...getGalleryItems()];
+  localStorage.setItem(GALLERY_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteGalleryItem = (id: string): GalleryItem[] => {
+  const updated = getGalleryItems().filter(i => i.id !== id);
+  localStorage.setItem(GALLERY_KEY, JSON.stringify(updated));
   return updated;
 };

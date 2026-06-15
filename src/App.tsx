@@ -25,10 +25,6 @@ import {
   addContactMessage,
   toggleContactRead,
   deleteContactMessage,
-  getEvents,
-  addEvent,
-  updateEventStatus,
-  deleteEvent,
   getRSVPs,
   addRSVP,
   getAlbums,
@@ -36,21 +32,32 @@ import {
   addAudioCategory,
   deleteAudioCategory,
   updateAlbumCategory,
+  getVideos,
+  addVideo,
+  deleteVideo,
+  getGalleryItems,
+  addGalleryItem,
+  deleteGalleryItem,
+  addAlbum,
+  deleteAlbum,
+  addTrackToAlbum,
+  deleteTrackFromAlbum,
 } from './utils/store';
 
 // Imports of real-time audio synthesis
 import { playSynth, stopSynth, getPlayingTrackId } from './utils/synth';
 
-import { Subscriber, ContactMessage, TourEvent, RSVP } from './types';
+import { Subscriber, ContactMessage, TourEvent, RSVP, Video, GalleryItem } from './types';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
-  const [events, setEvents] = useState<TourEvent[]>([]);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [albums, setAlbums] = useState<any[]>([]);
   const [audioCategories, setAudioCategories] = useState<string[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [showAdminBadge, setShowAdminBadge] = useState<boolean>(true);
   
@@ -61,10 +68,11 @@ export default function App() {
   useEffect(() => {
     setSubscribers(getSubscribers());
     setContacts(getContacts());
-    setEvents(getEvents());
     setRsvps(getRSVPs());
     setAlbums(getAlbums());
     setAudioCategories(getAudioCategories());
+    setVideos(getVideos());
+    setGalleryItems(getGalleryItems());
   }, []);
 
   // SEO Optimal Metadata Updates - Updates titles/descriptions dynamically for rapid client-side indexing
@@ -131,21 +139,6 @@ export default function App() {
     setContacts(deleteContactMessage(id));
   };
 
-  // 4. Dynamic Tour event creation
-  const handleAddEvent = (eventData: Omit<TourEvent, 'id'>): TourEvent => {
-    const newEvent = addEvent(eventData);
-    setEvents(getEvents());
-    return newEvent;
-  };
-
-  const handleUpdateEventStatus = (id: string, status: TourEvent['status']) => {
-    setEvents(updateEventStatus(id, status));
-  };
-
-  const handleDeleteEvent = (id: string) => {
-    setEvents(deleteEvent(id));
-  };
-
   // 5. Seat Booking RSVPs
   const handleAddRSVP = (eventId: string, eventName: string, name: string, email: string, ticketsCount: number): RSVP => {
     const newRsvp = addRSVP(eventId, eventName, name, email, ticketsCount);
@@ -167,6 +160,8 @@ export default function App() {
       case 'home':
         return (
           <HomeView
+            albums={albums}
+            videos={videos}
             onNavigate={handleNavigateTab}
             activeTrackId={activeTrackId}
             onPlayTrack={handlePlayTrack}
@@ -187,9 +182,9 @@ export default function App() {
           />
         );
       case 'videos':
-        return <VideoView />;
+        return <VideoView videos={videos} />;
       case 'gallery':
-        return <GalleryView />;
+        return <GalleryView galleryItems={galleryItems} />;
       case 'contact':
         return (
           <ContactView
@@ -202,18 +197,24 @@ export default function App() {
           <DashboardView
             subscribers={subscribers}
             contacts={contacts}
-            events={events}
             rsvps={rsvps}
             albums={albums}
             audioCategories={audioCategories}
-            onAddEvent={handleAddEvent}
-            onUpdateEventStatus={handleUpdateEventStatus}
-            onDeleteEvent={handleDeleteEvent}
+            videos={videos}
+            galleryItems={galleryItems}
             onToggleContactRead={handleToggleContactRead}
             onDeleteContact={handleDeleteContact}
             onAddAudioCategory={(cat) => setAudioCategories(addAudioCategory(cat))}
             onDeleteAudioCategory={(cat) => setAudioCategories(deleteAudioCategory(cat))}
             onUpdateAlbumCategory={(id, cat) => setAlbums(updateAlbumCategory(id, cat))}
+            onAddAlbum={(data) => setAlbums(addAlbum(data))}
+            onDeleteAlbum={(id) => setAlbums(deleteAlbum(id))}
+            onAddTrack={(aId, data) => setAlbums(addTrackToAlbum(aId, data))}
+            onDeleteTrack={(aId, tId) => setAlbums(deleteTrackFromAlbum(aId, tId))}
+            onAddVideo={(data) => setVideos(addVideo(data))}
+            onDeleteVideo={(id) => setVideos(deleteVideo(id))}
+            onAddGalleryItem={(data) => setGalleryItems(addGalleryItem(data))}
+            onDeleteGalleryItem={(id) => setGalleryItems(deleteGalleryItem(id))}
           />
         );
       default:

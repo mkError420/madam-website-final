@@ -4,12 +4,14 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, Video as VideoIcon, ExternalLink, PlayCircle, X, Volume2, Clock, ShieldAlert, Film } from 'lucide-react';
-import { ARTIST_INFO, ALBUMS, VIDEOS } from '../data';
+import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert } from 'lucide-react';
+import { ARTIST_INFO } from '../data';
 import { TourEvent, Video as VideoType } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HomeViewProps {
+  albums: any[];
+  videos: VideoType[];
   onNavigate: (tab: string) => void;
   activeTrackId: string | null;
   onPlayTrack: (trackId: string) => void;
@@ -18,6 +20,8 @@ interface HomeViewProps {
 }
 
 export default function HomeView({
+  albums,
+  videos,
   onNavigate,
   activeTrackId,
   onPlayTrack,
@@ -45,12 +49,12 @@ export default function HomeView({
   };
 
   // Featured Album is typically the latest: Solitude Sessions
-  const featuredAlbum = ALBUMS[0];
-  const featuredTrack = featuredAlbum.tracks[0]; // Vesper Hills
+  const featuredAlbum = albums.length > 0 ? albums[0] : null;
+  const featuredTrack = featuredAlbum && featuredAlbum.tracks && featuredAlbum.tracks.length > 0 ? featuredAlbum.tracks[0] : null;
 
   // Gather top tracks from her albums dynamically for the Audios section
-  const featuredTracks = ALBUMS.flatMap(album => 
-    album.tracks.map(track => ({
+  const featuredTracks = albums.flatMap(album => 
+    (album.tracks || []).map((track: any) => ({
       ...track,
       albumTitle: album.title,
       albumId: album.id,
@@ -80,7 +84,7 @@ export default function HomeView({
     }
   };
 
-  const isPlayingFeatured = activeTrackId === featuredTrack.id;
+  const isPlayingFeatured = featuredTrack ? activeTrackId === featuredTrack.id : false;
 
   return (
     <div className="space-y-24 pb-20">
@@ -152,6 +156,7 @@ export default function HomeView({
       </section>
 
       {/* 2. Featured Album Release (Interactive Promo) */}
+      {featuredAlbum && featuredTrack && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="featured-album-promo">
         <div className="bg-[#050505] border border-white/10 rounded-none p-8 sm:p-12 backdrop-blur-sm relative overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -233,6 +238,7 @@ export default function HomeView({
           </div>
         </div>
       </section>
+      )}
 
       {/* 2b. Dynamics: Audios Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in" id="home-featured-audios">
@@ -257,7 +263,9 @@ export default function HomeView({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Audio selection widget list */}
             <div className="space-y-4 text-left" id="home-audios-list">
-              {featuredTracks.map((track) => {
+              {featuredTracks.length === 0 ? (
+                <p className="text-white/40 text-xs font-mono py-8">No audio tracks available yet.</p>
+              ) : featuredTracks.map((track) => {
                 const isSelected = activeTrackId === track.id;
                 return (
                   <div
@@ -368,7 +376,11 @@ export default function HomeView({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8" id="home-videos-grid">
-            {VIDEOS.slice(0, 3).map((video) => (
+            {videos.length === 0 ? (
+              <div className="col-span-3 text-center py-8 text-white/40 font-mono text-xs">
+                 No visual content released yet.
+              </div>
+            ) : videos.slice(0, 3).map((video) => (
               <div
                 key={video.id}
                 id={`home-video-${video.id}`}

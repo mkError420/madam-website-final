@@ -5,11 +5,14 @@
 
 import React, { useState } from 'react';
 import { Play, PlayCircle, Info, Calendar, Clock, X, Volume2, ShieldAlert } from 'lucide-react';
-import { VIDEOS } from '../data';
 import { Video } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 
-export default function VideoView() {
+interface VideoViewProps {
+  videos: Video[];
+}
+
+export default function VideoView({ videos }: VideoViewProps) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(25); // initial simulated status
@@ -39,7 +42,11 @@ export default function VideoView() {
 
       {/* Grid of Video Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-8" id="videos-grid">
-        {VIDEOS.map((video) => (
+        {videos.length === 0 ? (
+           <div className="col-span-3 text-center text-white/40 font-mono text-xs py-12">
+              No videos available. Check back soon.
+           </div>
+        ) : videos.map((video) => (
           <motion.div
             key={video.id}
             id={`video-card-${video.id}`}
