@@ -31,6 +31,11 @@ import {
   deleteEvent,
   getRSVPs,
   addRSVP,
+  getAlbums,
+  getAudioCategories,
+  addAudioCategory,
+  deleteAudioCategory,
+  updateAlbumCategory,
 } from './utils/store';
 
 // Imports of real-time audio synthesis
@@ -44,6 +49,8 @@ export default function App() {
   const [contacts, setContacts] = useState<ContactMessage[]>([]);
   const [events, setEvents] = useState<TourEvent[]>([]);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
+  const [audioCategories, setAudioCategories] = useState<string[]>([]);
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [showAdminBadge, setShowAdminBadge] = useState<boolean>(true);
   
@@ -56,6 +63,8 @@ export default function App() {
     setContacts(getContacts());
     setEvents(getEvents());
     setRsvps(getRSVPs());
+    setAlbums(getAlbums());
+    setAudioCategories(getAudioCategories());
   }, []);
 
   // SEO Optimal Metadata Updates - Updates titles/descriptions dynamically for rapid client-side indexing
@@ -170,6 +179,8 @@ export default function App() {
       case 'audios':
         return (
           <AudioView
+            albums={albums}
+            categories={audioCategories}
             activeTrackId={activeTrackId}
             onPlayTrack={handlePlayTrack}
             onPauseTrack={handlePauseTrack}
@@ -193,11 +204,16 @@ export default function App() {
             contacts={contacts}
             events={events}
             rsvps={rsvps}
+            albums={albums}
+            audioCategories={audioCategories}
             onAddEvent={handleAddEvent}
             onUpdateEventStatus={handleUpdateEventStatus}
             onDeleteEvent={handleDeleteEvent}
             onToggleContactRead={handleToggleContactRead}
             onDeleteContact={handleDeleteContact}
+            onAddAudioCategory={(cat) => setAudioCategories(addAudioCategory(cat))}
+            onDeleteAudioCategory={(cat) => setAudioCategories(deleteAudioCategory(cat))}
+            onUpdateAlbumCategory={(id, cat) => setAlbums(updateAlbumCategory(id, cat))}
           />
         );
       default:

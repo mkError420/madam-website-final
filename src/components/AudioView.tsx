@@ -5,36 +5,55 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Disc, Share2, Volume2, ListMusic, Music, Heart, Star, ExternalLink, HelpCircle } from 'lucide-react';
-import { ALBUMS } from '../data';
-import { Track, Album } from '../types';
+import { Track } from '../types';
 import { getAnalyser } from '../utils/synth';
 
 interface AudioViewProps {
+  albums: any[];
+  categories: string[];
   activeTrackId: string | null;
   onPlayTrack: (trackId: string) => void;
   onPauseTrack: () => void;
 }
 
-export default function AudioView({ activeTrackId, onPlayTrack, onPauseTrack }: AudioViewProps) {
-  const [selectedAlbum, setSelectedAlbum] = useState<Album>(ALBUMS[0]);
+export default function AudioView({ albums, categories, activeTrackId, onPlayTrack, onPauseTrack }: AudioViewProps) {
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [lyricsTrack, setLyricsTrack] = useState<Track | null>(null);
   const [favoriteTracks, setFavoriteTracks] = useState<string[]>(['ss_1']); // default pre-favorite
   
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
 
+  const filteredAlbums = activeCategory === 'All' 
+    ? albums 
+    : albums.filter(alb => alb.category === activeCategory);
+
+  useEffect(() => {
+    if (albums.length > 0 && !selectedAlbum) {
+      setSelectedAlbum(albums[0]);
+    }
+  }, [albums, selectedAlbum]);
+
   // Auto-set the active track's parent album as the selected album for easy viewability
   useEffect(() => {
-    if (activeTrackId) {
-      const parentAlbum = ALBUMS.find(alb => alb.tracks.some(tr => tr.id === activeTrackId));
+    if (activeTrackId && albums.length > 0) {
+      const parentAlbum = albums.find(alb => alb.tracks.some((tr: any) => tr.id === activeTrackId));
       if (parentAlbum) {
         setSelectedAlbum(parentAlbum);
       }
     }
-  }, [activeTrackId]);
+  }, [activeTrackId, albums]);
+
+  // If selectedAlbum is not in filteredAlbums, auto-select the first one
+  useEffect(() => {
+    if (filteredAlbums.length > 0 && selectedAlbum && !filteredAlbums.find(a => a.id === selectedAlbum.id)) {
+      setSelectedAlbum(filteredAlbums[0]);
+    }
+  }, [filteredAlbums, selectedAlbum]);
 
   // Combined Active Track Finder
-  const allTracks = ALBUMS.flatMap(alb => alb.tracks);
+  const allTracks = albums.flatMap(alb => alb.tracks || []);
   const activeTrack = allTracks.find(t => t.id === activeTrackId);
 
   // 100% Real Interactive Canvas audio visualizer
@@ -203,8 +222,9 @@ export default function AudioView({ activeTrackId, onPlayTrack, onPauseTrack }: 
             ) : (
               <button
                 id="master-player-play-default"
-                onClick={() => onPlayTrack(ALBUMS[0].tracks[0].id)}
-                className="px-6 py-3.5 bg-white text-neutral-950 hover:bg-neutral-200 cursor-pointer text-[10px] font-mono uppercase font-semibold rounded-none active:scale-95 transition-all flex items-center space-x-2"
+                onClick={() => onPlayTrack(albums.length > 0 && albums[0].tracks ? albums[0].tracks[0].id : '')}
+                disabled={albums.length === 0}
+                className="px-6 py-3.5 bg-white text-neutral-950 hover:bg-neutral-200 cursor-pointer text-[10px] font-mono uppercase font-semibold rounded-none active:scale-95 transition-all flex items-center space-x-2 disabled:opacity-50"
               >
                 <Play className="h-4 w-4 fill-current ml-0.5" />
                 <span>audition default</span>
@@ -215,20 +235,43 @@ export default function AudioView({ activeTrackId, onPlayTrack, onPauseTrack }: 
         </div>
       </div>
 
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2 items-center border-b border-white/10 pb-4" id="audio-filters">
+        <ListMusic className="h-4 w-4 text-white/30 mr-2 hidden sm:block" />
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => { setActiveCategory(cat); setLyricsTrack(null); }}
+              className={`px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest transition-all cursor-pointer rounded-none border ${
+                isActive
+                  ? 'bg-white text-black border-white'
+                  : 'bg-transparent text-white/45 border-white/10 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
+      </div>
+
       {/* 3. Audio & Tracks Selection Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12" id="music-explore-grid">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-4" id="music-explore-grid">
         
         {/* Left: Album Navigation List */}
         <div className="lg:col-span-4 space-y-6 text-left">
           <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/40">Select Release</span>
           <div className="space-y-3">
-            {ALBUMS.map((alb) => (
+            {filteredAlbums.length === 0 ? (
+              <p className="text-white/40 text-xs font-mono">No albums in this category.</p>
+            ) : filteredAlbums.map((alb) => (
               <button
                 key={alb.id}
                 id={`album-select-btn-${alb.id}`}
                 onClick={() => { setSelectedAlbum(alb); setLyricsTrack(null); }}
                 className={`w-full p-4 rounded-none border text-left transition-all duration-300 flex items-center space-x-4 cursor-pointer ${
-                  selectedAlbum.id === alb.id
+                  selectedAlbum && selectedAlbum.id === alb.id
                     ? 'bg-white/5 border-white/20'
                     : 'bg-transparent border-white/10 hover:bg-white/5'
                 }`}
@@ -262,6 +305,8 @@ export default function AudioView({ activeTrackId, onPlayTrack, onPauseTrack }: 
         {/* Right: Tracks List inside Selected Album / lyrics panels */}
         <div className="lg:col-span-8 space-y-8 text-left">
           
+          {selectedAlbum ? (
+            <>
           {/* Header Description of Album */}
           <div className="flex flex-col sm:flex-row gap-6 sm:items-center justify-between border-b border-white/10 pb-6">
             <div className="space-y-1">
@@ -399,6 +444,12 @@ export default function AudioView({ activeTrackId, onPlayTrack, onPauseTrack }: 
             </div>
           )}
 
+            </>
+          ) : (
+            <div className="border border-white/10 rounded-none p-6 text-center text-white/40 font-mono text-xs">
+               Select an album to view its tracks.
+            </div>
+          )}
         </div>
       </section>
 

@@ -13,11 +13,16 @@ interface DashboardViewProps {
   contacts: ContactMessage[];
   events: TourEvent[];
   rsvps: RSVP[];
+  albums: any[];
+  audioCategories: string[];
   onAddEvent: (eventData: Omit<TourEvent, 'id'>) => TourEvent;
   onUpdateEventStatus: (id: string, status: TourEvent['status']) => void;
   onDeleteEvent: (id: string) => void;
   onToggleContactRead: (id: string) => void;
   onDeleteContact: (id: string) => void;
+  onAddAudioCategory: (category: string) => void;
+  onDeleteAudioCategory: (category: string) => void;
+  onUpdateAlbumCategory: (id: string, category: string) => void;
 }
 
 export default function DashboardView({
@@ -25,11 +30,16 @@ export default function DashboardView({
   contacts,
   events,
   rsvps,
+  albums,
+  audioCategories,
   onAddEvent,
   onUpdateEventStatus,
   onDeleteEvent,
   onToggleContactRead,
   onDeleteContact,
+  onAddAudioCategory,
+  onDeleteAudioCategory,
+  onUpdateAlbumCategory,
 }: DashboardViewProps) {
   // New Show Event Form
   const [date, setDate] = useState('2026-09-15');
@@ -38,6 +48,7 @@ export default function DashboardView({
   const [country, setCountry] = useState('USA');
   const [status, setStatus] = useState<TourEvent['status']>('available');
   const [formSuccess, setFormSuccess] = useState(false);
+  const [newCat, setNewCat] = useState('');
 
   // Expanded messages controls
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
@@ -312,6 +323,46 @@ export default function DashboardView({
                   );
                 })
               )}
+            </div>
+          </div>
+
+          {/* Sub block 2b: Audio Categories Manager */}
+          <div className="bg-black/40 border border-white/10 rounded-none p-6 sm:p-8 space-y-6" id="audio-categories-manager">
+            <div className="space-y-1">
+              <h3 className="font-sans text-lg font-light uppercase tracking-widest text-white">Audio Categories & Albums</h3>
+              <p className="text-white/40 text-xs font-mono uppercase tracking-wide">Manage Categories and Assign Albums</p>
+            </div>
+            
+            <form onSubmit={(e) => { e.preventDefault(); if (newCat.trim()) { onAddAudioCategory(newCat.trim()); setNewCat(''); } }} className="flex gap-2">
+              <input value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="New Category (e.g. Acoustic)" className="flex-grow px-3.5 py-2.5 bg-black border border-white/10 text-white text-xs focus:outline-none focus:border-white/30" />
+              <button type="submit" className="px-5 py-2.5 bg-white text-black text-[10px] uppercase font-bold tracking-widest cursor-pointer hover:bg-neutral-200 transition-colors">Add</button>
+            </form>
+
+            <div className="flex flex-wrap gap-2 pt-2">
+               {audioCategories.filter(c => c !== 'All').map(cat => (
+                  <div key={cat} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 text-[10px] text-white font-mono uppercase tracking-widest">
+                     <span>{cat}</span>
+                     <button onClick={() => onDeleteAudioCategory(cat)} className="text-white/40 hover:text-white cursor-pointer"><Trash2 className="h-3 w-3" /></button>
+                  </div>
+               ))}
+            </div>
+
+            <div className="divide-y divide-white/5 pt-4 border-t border-white/10 font-mono text-xs">
+               {albums.map(alb => (
+                 <div key={alb.id} className="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span className="text-white font-sans uppercase tracking-wider">{alb.title}</span>
+                    <select
+                      value={alb.category || ''}
+                      onChange={(e) => onUpdateAlbumCategory(alb.id, e.target.value)}
+                      className="bg-black border border-white/10 text-white/80 font-mono text-[9px] uppercase px-2 py-1.5 focus:outline-none focus:border-white/30 cursor-pointer"
+                    >
+                      <option value="" className="bg-black text-white/40">-- No Category --</option>
+                      {audioCategories.filter(c => c !== 'All').map(cat => (
+                         <option key={cat} value={cat} className="bg-black text-white">{cat}</option>
+                      ))}
+                    </select>
+                 </div>
+               ))}
             </div>
           </div>
 

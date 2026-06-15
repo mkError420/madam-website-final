@@ -4,12 +4,14 @@
  */
 
 import { TourEvent, ContactMessage, Subscriber, RSVP } from '../types';
-import { TOUR_DATES } from '../data';
+import { TOUR_DATES, ALBUMS as INITIAL_ALBUMS } from '../data';
 
 const SUBSCRIBERS_KEY = 'aria_vance_subscribers';
 const CONTACTS_KEY = 'aria_vance_contacts';
 const EVENTS_KEY = 'aria_vance_events';
 const RSVPS_KEY = 'aria_vance_rsvps';
+const ALBUMS_KEY = 'aria_vance_albums';
+const CATEGORIES_KEY = 'aria_vance_audio_categories';
 
 // Initialize with healthy, elegant default data
 const DEFAULT_SUBSCRIBERS: Subscriber[] = [
@@ -178,4 +180,51 @@ export const addRSVP = (eventId: string, eventName: string, name: string, email:
   rsvps.unshift(newRsvp);
   localStorage.setItem(RSVPS_KEY, JSON.stringify(rsvps));
   return newRsvp;
+};
+
+const DEFAULT_CATEGORIES = ['All', 'Studio Albums', 'Live Sessions', 'EPs & Singles'];
+
+export const getAudioCategories = (): string[] => {
+  const data = localStorage.getItem(CATEGORIES_KEY);
+  if (!data) {
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(DEFAULT_CATEGORIES));
+    return DEFAULT_CATEGORIES;
+  }
+  return JSON.parse(data);
+};
+
+export const addAudioCategory = (category: string): string[] => {
+  const cats = getAudioCategories();
+  if (!cats.includes(category)) {
+    cats.push(category);
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(cats));
+  }
+  return cats;
+};
+
+export const deleteAudioCategory = (category: string): string[] => {
+  const cats = getAudioCategories();
+  const updated = cats.filter(c => c !== category);
+  localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+export const getAlbums = (): any[] => {
+  const data = localStorage.getItem(ALBUMS_KEY);
+  if (!data) {
+    const initialized = INITIAL_ALBUMS.map((alb, index) => ({
+      ...alb,
+      category: index === 0 ? 'Studio Albums' : index === 1 ? 'Live Sessions' : 'EPs & Singles'
+    }));
+    localStorage.setItem(ALBUMS_KEY, JSON.stringify(initialized));
+    return initialized;
+  }
+  return JSON.parse(data);
+};
+
+export const updateAlbumCategory = (id: string, category: string): any[] => {
+  const albums = getAlbums();
+  const updated = albums.map(a => a.id === id ? { ...a, category } : a);
+  localStorage.setItem(ALBUMS_KEY, JSON.stringify(updated));
+  return updated;
 };
