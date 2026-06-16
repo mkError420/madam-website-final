@@ -4,14 +4,16 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert, Volume, Volume1, VolumeX } from 'lucide-react';
+import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert, Volume, Volume1, VolumeX, MapPin, Star, Ticket, CheckCircle } from 'lucide-react';
 import { ARTIST_INFO } from '../data';
 import { TourEvent, Video as VideoType } from '../types';
 import { motion, AnimatePresence, useScroll, useVelocity, useTransform, useSpring } from 'motion/react';
+import { ThreeDMarquee } from '@/src/components/3d-marquee';
 
 interface HomeViewProps {
   albums: any[];
   videos: VideoType[];
+  tourDates: TourEvent[];
   onNavigate: (tab: string) => void;
   activeTrackId: string | null;
   isPlaying: boolean;
@@ -34,6 +36,7 @@ const formatTime = (seconds: number) => {
 export default function HomeView({
   albums,
   videos,
+  tourDates,
   onNavigate,
   activeTrackId,
   isPlaying,
@@ -54,6 +57,15 @@ export default function HomeView({
   const [activeVideo, setActiveVideo] = useState<VideoType | null>(null);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(25);
+
+  // RSVP simulation state
+  const [rsvpStatus, setRsvpStatus] = useState<Record<string, boolean>>({});
+
+  const handleRSVP = (eventId: string) => {
+    // Simulation of a functional RSVP action with UI feedback
+    setRsvpStatus(prev => ({ ...prev, [eventId]: true }));
+    setTimeout(() => setRsvpStatus(prev => ({ ...prev, [eventId]: false })), 3000);
+  };
 
   // 3D Plane Scroll Velocity Logic
   const { scrollY } = useScroll();
@@ -120,63 +132,45 @@ export default function HomeView({
   return (
     <div className="space-y-24 pb-20">
       
-      {/* 1. Cinematic Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden" id="hero-section">
-        {/* Ambient Dark Overlay and Background Image */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 via-neutral-950/90 to-neutral-950 z-10" />
-          <img 
-            src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=1600" 
-            alt="Aria Vance Stage Studio" 
-            className="w-full h-full object-cover scale-105 object-center brightness-75 transition-all duration-1000"
-            referrerPolicy="no-referrer"
+      {/* 1. Cinematic Video Hero Section (Pure Visual) */}
+      <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-neutral-950" id="hero-section">
+        {/* Background 3D Marquee using video thumbnails */}
+        <div className="absolute inset-0 z-10 opacity-30 pointer-events-none">
+          <ThreeDMarquee 
+            images={videos.map(v => v.thumbnailUrl)} 
+            className="absolute inset-0 h-full w-full"
           />
         </div>
+        <div className="absolute inset-0 z-15 bg-gradient-to-b from-neutral-950/40 via-neutral-950/80 to-neutral-950 pointer-events-none" />
 
-        {/* Floating Colorful Glows */}
-        <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
-
-        {/* Hero Text */}
-        <div className="relative z-20 text-center max-w-4xl px-4 select-none">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="space-y-6"
-          >
-            <span className="inline-flex items-center space-x-2 text-xs font-mono tracking-[0.25em] text-white/80 uppercase px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-              <Sparkles className="h-3 w-3 text-white/55" />
-              <span>Quiet Echoes. Honest Grooves.</span>
-            </span>
-
-            <h1 className="font-sans font-light text-5xl sm:text-8xl tracking-tight text-white uppercase leading-none">
-              Aria <span className="italic font-serif font-light lowercase text-indigo-400">Vance</span>
-            </h1>
-
-            <p className="font-sans text-white/60 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
-              {ARTIST_INFO.bioIntro}
-            </p>
-
-            <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                id="hero-play-music-btn"
-                onClick={() => onNavigate('audios')}
-                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-sans font-medium text-xs tracking-widest uppercase hover:bg-indigo-500 border border-indigo-500 transition-all duration-300 rounded-sm cursor-pointer flex items-center justify-center space-x-2 group shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+        {/* Featured Visuals Showcase Grid */}
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {videos.slice(0, 3).map((video, idx) => (
+              <motion.div
+                key={video.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.15 + 0.3, duration: 0.8 }}
+                className="group relative aspect-video overflow-hidden bg-neutral-900 border border-white/5 hover:border-indigo-500/30 transition-all duration-500 shadow-2xl"
               >
-                <Music className="h-4 w-4" />
-                <span>Hear the Discography</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Fine bottom scroll indicator line */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center space-y-2 opacity-50">
-          <span className="text-[10px] uppercase tracking-[0.3em] font-mono text-neutral-500">Scroll</span>
-          <div className="h-10 w-[1px] bg-gradient-to-b from-neutral-500 to-transparent" />
+                <img 
+                  src={video.thumbnailUrl} 
+                  alt={video.title} 
+                  className="w-full h-full object-cover grayscale brightness-50 group-hover:grayscale-0 group-hover:brightness-110 group-hover:scale-105 transition-all duration-700"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
+                  <button
+                    onClick={() => handleOpenVideo(video)}
+                    className="p-4 rounded-full bg-white text-black scale-90 group-hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl cursor-pointer"
+                  >
+                    <PlayCircle className="h-8 w-8" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -518,6 +512,113 @@ export default function HomeView({
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* 3. Upcoming Live Appearances */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in" id="home-tour-section">
+        <div className="space-y-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/10 pb-6">
+            <div className="space-y-2 text-left">
+              <span className="font-mono text-xs uppercase tracking-[0.25em] text-white/40">Live Performances</span>
+              <h2 className="font-sans text-3xl sm:text-4xl font-light text-white uppercase tracking-widest">
+                Tour Dates
+              </h2>
+            </div>
+            <div className="flex items-center space-x-2 text-[10px] font-mono text-white/30 uppercase tracking-[0.2em]">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Tickets currently available for select dates</span>
+            </div>
+          </div>
+
+          <div className="border border-white/10 bg-black/40 divide-y divide-white/5" id="home-tour-list">
+            {tourDates?.filter(event => event.status !== 'past').slice(0, 5).map((event) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="group p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-6 text-left">
+                  <div className="flex flex-col items-start min-w-[100px]">
+                    <span className="text-white text-xl font-light font-sans tracking-tighter">
+                      {new Date(event.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }).toUpperCase()}
+                    </span>
+                    <span className="text-white/40 font-mono text-[10px] uppercase tracking-widest">
+                      {new Date(event.date).getFullYear()}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-white text-base font-light tracking-wider uppercase group-hover:text-indigo-300 transition-colors">
+                      {event.venue}
+                    </p>
+                    <div className="flex items-center space-x-2 text-white/40 font-mono text-[10px] uppercase tracking-widest">
+                      <MapPin className="h-3 w-3" />
+                      <span>{event.city}, {event.country}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between md:justify-end gap-6">
+                  {event.status === 'sold-out' ? (
+                    <span className="px-4 py-2 border border-white/5 bg-white/5 text-white/30 font-mono text-[10px] uppercase tracking-widest cursor-not-allowed">
+                      Sold Out
+                    </span>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => handleRSVP(event.id)}
+                        className={`px-4 py-2 border font-mono text-[10px] uppercase tracking-widest transition-all cursor-pointer flex items-center space-x-2 ${
+                          rsvpStatus[event.id] 
+                            ? 'bg-emerald-500 border-emerald-500 text-white' 
+                            : 'bg-transparent border-white/10 text-white/60 hover:text-white hover:border-white'
+                        }`}
+                      >
+                        {rsvpStatus[event.id] ? (
+                          <><CheckCircle className="h-3 w-3" /><span>RSVP Confirmed</span></>
+                        ) : (
+                          <span>RSVP Interest</span>
+                        )}
+                      </button>
+                      <a href={event.ticketUrl} className="px-6 py-2 bg-white text-black font-sans font-bold text-[10px] uppercase tracking-widest hover:bg-neutral-200 transition-colors flex items-center space-x-2">
+                        <Ticket className="h-3 w-3" /><span>Tickets</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3b. Press & Critical Response */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in" id="home-press-quotes">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {ARTIST_INFO.pressQuotes.map((quote, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-[#050505] border border-white/5 p-8 flex flex-col justify-between space-y-6 relative overflow-hidden group text-left"
+            >
+              <div className="absolute top-0 left-0 w-1 h-0 bg-indigo-500 group-hover:h-full transition-all duration-500" />
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`h-3 w-3 ${i < Math.floor(quote.rating) ? 'text-white fill-white' : 'text-white/10'}`} />
+                ))}
+              </div>
+              <p className="text-white/80 text-lg italic font-serif leading-relaxed">"{quote.quote}"</p>
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-white/40 uppercase tracking-widest">
+                <span>Source: {quote.source}</span>
+                <span className="text-white/20">Critically Acclaimed</span>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
