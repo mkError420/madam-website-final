@@ -8,7 +8,6 @@ import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCir
 import { ARTIST_INFO } from '../data';
 import { TourEvent, Video as VideoType } from '../types';
 import { motion, AnimatePresence, useScroll, useVelocity, useTransform, useSpring } from 'motion/react';
-import { ThreeDMarquee } from '@/src/components/3d-marquee';
 
 interface HomeViewProps {
   albums: any[];
@@ -132,45 +131,63 @@ export default function HomeView({
   return (
     <div className="space-y-24 pb-20">
       
-      {/* 1. Cinematic Video Hero Section (Pure Visual) */}
-      <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-neutral-950" id="hero-section">
-        {/* Background 3D Marquee using video thumbnails */}
-        <div className="absolute inset-0 z-10 opacity-30 pointer-events-none">
-          <ThreeDMarquee 
-            images={videos.map(v => v.thumbnailUrl)} 
-            className="absolute inset-0 h-full w-full"
+      {/* 1. Cinematic Hero Section */}
+      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden" id="hero-section">
+        {/* Ambient Dark Overlay and Background Image */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 via-neutral-950/90 to-neutral-950 z-10" />
+          <img 
+            src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=1600" 
+            alt="Aria Vance Stage Studio" 
+            className="w-full h-full object-cover scale-105 object-center brightness-75 transition-all duration-1000"
+            referrerPolicy="no-referrer"
           />
         </div>
-        <div className="absolute inset-0 z-15 bg-gradient-to-b from-neutral-950/40 via-neutral-950/80 to-neutral-950 pointer-events-none" />
 
-        {/* Featured Visuals Showcase Grid */}
-        <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {videos.slice(0, 3).map((video, idx) => (
-              <motion.div
-                key={video.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.15 + 0.3, duration: 0.8 }}
-                className="group relative aspect-video overflow-hidden bg-neutral-900 border border-white/5 hover:border-indigo-500/30 transition-all duration-500 shadow-2xl"
+        {/* Floating Colorful Glows */}
+        <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
+
+        {/* Hero Text */}
+        <div className="relative z-20 text-center max-w-4xl px-4 select-none">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="space-y-6"
+          >
+            <span className="inline-flex items-center space-x-2 text-xs font-mono tracking-[0.25em] text-white/80 uppercase px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
+              <Sparkles className="h-3 w-3 text-white/55" />
+              <span>Quiet Echoes. Honest Grooves.</span>
+            </span>
+
+            <h1 className="font-sans font-light text-5xl sm:text-8xl tracking-tight text-white uppercase leading-none">
+              Aria <span className="italic font-serif font-light lowercase text-indigo-400">Vance</span>
+            </h1>
+
+            <p className="font-sans text-white/60 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+              {ARTIST_INFO.bioIntro}
+            </p>
+
+            <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                id="hero-play-music-btn"
+                onClick={() => onNavigate('audios')}
+                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-sans font-medium text-xs tracking-widest uppercase hover:bg-indigo-500 border border-indigo-500 transition-all duration-300 rounded-sm cursor-pointer flex items-center justify-center space-x-2 group shadow-[0_0_20px_rgba(79,70,229,0.3)]"
               >
-                <img 
-                  src={video.thumbnailUrl} 
-                  alt={video.title} 
-                  className="w-full h-full object-cover grayscale brightness-50 group-hover:grayscale-0 group-hover:brightness-110 group-hover:scale-105 transition-all duration-700"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors flex items-center justify-center">
-                  <button
-                    onClick={() => handleOpenVideo(video)}
-                    className="p-4 rounded-full bg-white text-black scale-90 group-hover:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-xl cursor-pointer"
-                  >
-                    <PlayCircle className="h-8 w-8" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                <Music className="h-4 w-4" />
+                <span>Hear the Discography</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Fine bottom scroll indicator line */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center space-y-2 opacity-50">
+          <span className="text-[10px] uppercase tracking-[0.3em] font-mono text-neutral-500">Scroll</span>
+          <div className="h-10 w-[1px] bg-gradient-to-b from-neutral-500 to-transparent" />
         </div>
       </section>
 
