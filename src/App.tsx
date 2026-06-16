@@ -214,6 +214,11 @@ export default function App() {
             isPlaying={isPlaying}
             onPlayTrack={handlePlayTrack}
             onPauseTrack={handlePauseTrack}
+            currentTime={currentTime}
+            duration={duration}
+            volume={volume}
+            onSeek={handleSeek}
+            onVolumeChange={handleVolumeChange}
             onSubscribeNewsletter={handleSubscribeNewsletter}
           />
         );

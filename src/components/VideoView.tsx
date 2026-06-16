@@ -6,7 +6,9 @@
 import React, { useState } from 'react';
 import { Play, PlayCircle, Info, Calendar, Clock, X, Volume2, ShieldAlert } from 'lucide-react';
 import { Video } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useVelocity, useTransform, useSpring } from 'motion/react';
+import { ThreeDMarquee } from '@/src/components/3d-marquee';
+
 
 interface VideoViewProps {
   videos: Video[];
@@ -16,6 +18,19 @@ export default function VideoView({ videos }: VideoViewProps) {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(25); // initial simulated status
+
+  // 3D Plane Scroll Velocity Logic
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  
+  const smoothVelocity = useSpring(scrollVelocity, {
+    damping: 50,
+    stiffness: 400
+  });
+
+  // Map scroll velocity to subtle 3D rotations and skews
+  const velocityRotate = useTransform(smoothVelocity, [-2000, 2000], [-8, 8]);
+  const velocitySkew = useTransform(smoothVelocity, [-2000, 2000], [-3, 3]);
 
   const handleOpenVideo = (video: Video) => {
     setActiveVideo(video);
@@ -29,19 +44,38 @@ export default function VideoView({ videos }: VideoViewProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 select-none" id="video-container">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24 select-none overflow-hidden" id="video-container">
       
-      {/* Page Title */}
-      <div className="space-y-4 text-left">
-        <span className="font-mono text-xs uppercase tracking-[0.25em] text-white/40">Visuals</span>
-        <h1 className="font-sans text-4xl sm:text-6xl font-light text-white uppercase tracking-widest">
-          Music Videos & <span className="italic font-serif font-light lowercase text-white/90">cinema</span>
-        </h1>
-        <div className="h-[1px] w-20 bg-white/20" />
-      </div>
+      {/* Hero Section with 3D Marquee */}
+      <section className="relative h-[600px] w-full flex flex-col items-center justify-center overflow-hidden rounded-3xl bg-neutral-950 border border-white/5">
+        <div className="relative z-20 text-center space-y-6 px-4">
+          <motion.span 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-mono text-xs uppercase tracking-[0.3em] text-indigo-400"
+          >
+            Visual Journey
+          </motion.span>
+          <h1 className="font-sans text-4xl sm:text-7xl font-light text-white uppercase tracking-[0.1em] max-w-4xl">
+            Cinematics & <span className="italic font-serif font-light lowercase text-indigo-300">visuals</span>
+          </h1>
+          <p className="text-white/50 text-sm sm:text-base font-light max-w-2xl mx-auto leading-relaxed">
+            Explore the visual identity of Aria Vance through music videos, live sessions, and exclusive behind-the-scenes content.
+          </p>
+        </div>
+
+        {/* Background 3D Marquee using actual video thumbnails */}
+        <div className="absolute inset-0 z-10 opacity-30">
+          <ThreeDMarquee 
+            images={videos.map(v => v.thumbnailUrl)} 
+            className="absolute inset-0 h-full w-full pointer-events-none"
+          />
+        </div>
+        <div className="absolute inset-0 z-15 bg-gradient-to-b from-neutral-950/20 via-neutral-950/80 to-neutral-950" />
+      </section>
 
       {/* Grid of Video Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8" id="videos-grid">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 [perspective:2000px] pt-12" id="videos-grid">
         {videos.length === 0 ? (
            <div className="col-span-3 text-center text-white/40 font-mono text-xs py-12">
               No videos available. Check back soon.
@@ -51,6 +85,7 @@ export default function VideoView({ videos }: VideoViewProps) {
             key={video.id}
             id={`video-card-${video.id}`}
             whileHover={{ y: -6 }}
+            style={{ rotateX: velocityRotate, skewY: velocitySkew, transformPerspective: 1000 }}
             className="group bg-[#050505] border border-white/10 rounded-none overflow-hidden flex flex-col justify-between"
           >
             {/* Aspect Thumbnail Container */}

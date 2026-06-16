@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert, Volume, Volume1, VolumeX } from 'lucide-react';
 import { ARTIST_INFO } from '../data';
 import { TourEvent, Video as VideoType } from '../types';
 import { motion, AnimatePresence, useScroll, useVelocity, useTransform, useSpring } from 'motion/react';
@@ -17,8 +17,19 @@ interface HomeViewProps {
   isPlaying: boolean;
   onPlayTrack: (trackId: string) => void;
   onPauseTrack: () => void;
+  currentTime: number;
+  duration: number;
+  volume: number;
+  onSeek: (time: number) => void;
+  onVolumeChange: (volume: number) => void;
   onSubscribeNewsletter: (email: string) => Promise<{ success: boolean; message: string }>;
 }
+
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+};
 
 export default function HomeView({
   albums,
@@ -28,6 +39,11 @@ export default function HomeView({
   isPlaying,
   onPlayTrack,
   onPauseTrack,
+  currentTime,
+  duration,
+  volume,
+  onSeek,
+  onVolumeChange,
   onSubscribeNewsletter
 }: HomeViewProps) {
   const [email, setEmail] = useState('');
@@ -358,21 +374,61 @@ export default function HomeView({
             {/* Poetic Quote & Stylized Vinyl Art display */}
             <motion.div 
               style={{ rotateX: velocityRotate, skewY: velocitySkew, transformPerspective: 1000 }}
-              className="bg-[#050505] border border-white/5 rounded-none p-6 flex flex-col justify-between text-left relative overflow-hidden" 
+              className="bg-[#050505] border border-white/5 rounded-none p-8 flex flex-col justify-between text-left relative overflow-hidden" 
               id="home-audio-promo-art"
             >
               <div className="absolute -right-16 -bottom-16 w-48 h-48 rounded-full border border-indigo-500/10 animate-[spin_40s_linear_infinite] flex items-center justify-center pointer-events-none opacity-30">
                 <Disc className="h-32 w-32 text-indigo-400/50" />
               </div>
-              <div className="space-y-4 max-w-sm select-none z-10">
-                <Music className="h-5 w-5 text-indigo-400/50" />
-                <p className="text-white/60 text-sm italic font-serif leading-relaxed">
-                  "Music resides in the spaces we leave empty. These tracks are stories shaped over quiet nights, warm fires, and copper strings."
-                </p>
-                <div className="h-[1px] w-8 bg-white/20" />
-                <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest">
-                  — Aria’s studio diary note
-                </p>
+
+              <div className="z-10 space-y-8">
+                <div className="space-y-4 max-w-sm select-none">
+                  <Music className="h-5 w-5 text-indigo-400/50" />
+                  <p className="text-white/60 text-sm italic font-serif leading-relaxed">
+                    "Music resides in the spaces we leave empty. These tracks are stories shaped over quiet nights, warm fires, and copper strings."
+                  </p>
+                  <div className="h-[1px] w-8 bg-white/20" />
+                  <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest">
+                    — Aria’s studio diary note
+                  </p>
+                </div>
+
+                {/* Interactive Player Section */}
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-mono text-[10px] text-white/40">{formatTime(currentTime)}</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      value={currentTime}
+                      onInput={(e) => onSeek(Number(e.currentTarget.value))}
+                      disabled={!activeTrackId}
+                      className="flex-grow h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500 disabled:cursor-not-allowed"
+                    />
+                    <span className="font-mono text-[10px] text-white/40">{formatTime(duration)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <button onClick={() => onVolumeChange(volume > 0 ? 0 : 0.5)} className="text-white/40 hover:text-white transition-colors cursor-pointer">
+                        {volume === 0 ? <VolumeX className="h-4 w-4"/> : volume < 0.5 ? <Volume1 className="h-4 w-4"/> : <Volume2 className="h-4 w-4"/>}
+                      </button>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={(e) => onVolumeChange(Number(e.target.value))}
+                        className="w-16 h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-white"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 text-[10px] font-mono text-white/40 uppercase tracking-widest">
+                      {activeTrackId ? (isPlaying ? 'Streaming Signal' : 'Paused') : 'System Idle'}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-8 border-t border-white/5 mt-auto flex items-center justify-between text-[10px] font-mono text-white/40 uppercase tracking-widest z-10">
