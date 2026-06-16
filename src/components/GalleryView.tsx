@@ -82,7 +82,7 @@ export default function GalleryView() {
       </div>
 
       {/* Masonry-like Grid Layout */}
-      <section className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6" id="gallery-masonry-grid">
+      <section className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 [perspective:1000px]" id="gallery-masonry-grid">
         {filteredItems.map((item, idx) => {
           return (
             <motion.div
@@ -91,9 +91,9 @@ export default function GalleryView() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              whileHover={{ scale: 1.015 }}
+              whileHover={{ scale: 1.05, rotateY: 8, rotateX: -5, translateZ: 30 }}
               onClick={() => setLightboxIndex(idx)}
-              className="break-inside-avoid relative rounded-none overflow-hidden group cursor-pointer border border-white/10 bg-black/40 flex flex-col mb-6"
+              className="break-inside-avoid relative rounded-none overflow-hidden group cursor-pointer border border-white/10 bg-black/40 flex flex-col mb-6 transition-all duration-500 transform-gpu preserve-3d"
             >
               <img
                 src={item.url}

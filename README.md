@@ -14,5 +14,7 @@ This contains everything you need to run your app locally.
 
 1. Install dependencies:
    `npm install`
+2. Install 3D Engine dependencies:
+   `npm install three @types/three @react-three/fiber @react-three/drei`
 2. Run the app:
    `npm run dev`

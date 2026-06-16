@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Calendar, Music, Sparkles, Mail, Play, Pause, Disc, PlayCircle, X, Volume2, ShieldAlert } from 'lucide-react';
 import { ARTIST_INFO } from '../data';
 import { TourEvent, Video as VideoType } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useVelocity, useTransform, useSpring } from 'motion/react';
 
 interface HomeViewProps {
   albums: any[];
@@ -38,6 +38,19 @@ export default function HomeView({
   const [activeVideo, setActiveVideo] = useState<VideoType | null>(null);
   const [isPlayingSim, setIsPlayingSim] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(25);
+
+  // 3D Plane Scroll Velocity Logic
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  
+  const smoothVelocity = useSpring(scrollVelocity, {
+    damping: 50,
+    stiffness: 400
+  });
+
+  // Map scroll velocity to subtle 3D rotations and skews
+  const velocityRotate = useTransform(smoothVelocity, [-2000, 2000], [-8, 8]);
+  const velocitySkew = useTransform(smoothVelocity, [-2000, 2000], [-3, 3]);
 
   const handleOpenVideo = (video: VideoType) => {
     setActiveVideo(video);
@@ -95,23 +108,25 @@ export default function HomeView({
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden" id="hero-section">
         {/* Ambient Dark Overlay and Background Image */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/40 via-neutral-950/80 to-neutral-950 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 via-neutral-950/90 to-neutral-950 z-10" />
           <img 
             src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=1600" 
             alt="Aria Vance Stage Studio" 
-            className="w-full h-full object-cover scale-105 object-center grayscale hover:grayscale-0 transition-all duration-1000"
+            className="w-full h-full object-cover scale-105 object-center brightness-75 transition-all duration-1000"
             referrerPolicy="no-referrer"
           />
         </div>
 
-        {/* Floating Radial Glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-white/5 rounded-full blur-[100px] z-0 animate-pulse pointer-events-none" />
+        {/* Floating Colorful Glows */}
+        <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] z-0 pointer-events-none" />
 
         {/* Hero Text */}
         <div className="relative z-20 text-center max-w-4xl px-4 select-none">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
             className="space-y-6"
           >
@@ -121,7 +136,7 @@ export default function HomeView({
             </span>
 
             <h1 className="font-sans font-light text-5xl sm:text-8xl tracking-tight text-white uppercase leading-none">
-              Aria <span className="italic font-serif font-light lowercase text-white/95">Vance</span>
+              Aria <span className="italic font-serif font-light lowercase text-indigo-400">Vance</span>
             </h1>
 
             <p className="font-sans text-white/60 text-base sm:text-lg max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
@@ -132,19 +147,11 @@ export default function HomeView({
               <button
                 id="hero-play-music-btn"
                 onClick={() => onNavigate('audios')}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-neutral-950 font-sans font-medium text-xs tracking-widest uppercase hover:bg-neutral-900 hover:text-white border border-white transition-all duration-300 rounded-sm cursor-pointer flex items-center justify-center space-x-2 group"
+                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white font-sans font-medium text-xs tracking-widest uppercase hover:bg-indigo-500 border border-indigo-500 transition-all duration-300 rounded-sm cursor-pointer flex items-center justify-center space-x-2 group shadow-[0_0_20px_rgba(79,70,229,0.3)]"
               >
                 <Music className="h-4 w-4" />
                 <span>Hear the Discography</span>
-              </button>
-              
-              <button
-                id="hero-tour-btn"
-                onClick={() => onNavigate('shows')}
-                className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/10 text-white/80 font-sans text-xs tracking-widest uppercase hover:bg-white/5 hover:text-white hover:border-white/30 transition-all duration-300 rounded-sm cursor-pointer flex items-center justify-center space-x-2"
-              >
-                <Calendar className="h-4 w-4 text-white/50" />
-                <span>View Live Tour</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </motion.div>
@@ -158,18 +165,26 @@ export default function HomeView({
       </section>
 
       {/* 2. Featured Album Release (Interactive Promo) */}
+      <AnimatePresence mode="wait">
       {featuredAlbum && featuredTrack && (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" id="featured-album-promo">
-        <div className="bg-[#050505] border border-white/10 rounded-none p-8 sm:p-12 backdrop-blur-sm relative overflow-hidden">
+      <motion.section 
+        key="featured-promo"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 [perspective:1200px]" id="featured-album-promo">
+        <motion.div 
+          whileHover={{ rotateY: 2, rotateX: -2, translateZ: 20 }}
+          style={{ rotateX: velocityRotate, skewY: velocitySkew, transformPerspective: 1200 }}
+          className="bg-[#050505] border border-indigo-500/20 rounded-none p-8 sm:p-12 backdrop-blur-sm relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform-gpu transition-transform duration-500 ease-out"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Album Cover Art */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative group max-w-sm w-full aspect-square rounded-none overflow-hidden shadow-2xl filter brightness-95 hover:brightness-100 transition-all duration-500 border border-white/5">
+              <div className="relative max-w-sm w-full aspect-square rounded-none overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] filter brightness-90 hover:brightness-100 transition-all duration-500 border border-white/5">
                 <img
                   src={featuredAlbum.coverUrl}
                   alt={featuredAlbum.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -184,7 +199,7 @@ export default function HomeView({
             <div className="lg:col-span-7 space-y-6">
               <div className="space-y-2">
                 <span className="font-mono text-xs uppercase tracking-[0.25em] text-white/40">Latest Release</span>
-                <h2 className="font-sans font-light text-3xl sm:text-4xl text-white tracking-widest uppercase">
+                <h2 className="font-sans font-light text-3xl sm:text-4xl text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">
                   {featuredAlbum.title}
                 </h2>
                 <p className="text-xs text-white/30 font-mono tracking-widest uppercase">
@@ -204,7 +219,7 @@ export default function HomeView({
                     onClick={() => isPlayingFeatured ? onPauseTrack() : onPlayTrack(featuredTrack.id)}
                     className="p-4 rounded-full border border-white/20 text-white hover:border-white hover:bg-white/5 cursor-pointer active:scale-95 transition-all"
                   >
-                    {isPlayingFeatured ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+                    {isPlayingFeatured ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-indigo-400 text-indigo-400 ml-0.5" />}
                   </button>
                   <div className="text-left">
                     <p className="text-white text-xs font-semibold tracking-widest uppercase">{featuredTrack.title}</p>
@@ -215,10 +230,10 @@ export default function HomeView({
                 <div className="hidden sm:flex items-center space-x-1">
                   {isPlayingFeatured ? (
                     <div className="flex items-end space-x-0.5 h-6">
-                      <span className="w-[2px] bg-white rounded-full animate-[bounce_1s_infinite_100ms]" style={{ height: '30%' }} />
-                      <span className="w-[2px] bg-white rounded-full animate-[bounce_1s_infinite_400ms]" style={{ height: '80%' }} />
-                      <span className="w-[2px] bg-white rounded-full animate-[bounce_1s_infinite_200ms]" style={{ height: '50%' }} />
-                      <span className="w-[2px] bg-white rounded-full animate-[bounce_1s_infinite_650ms]" style={{ height: '90%' }} />
+                      <span className="w-[2px] bg-indigo-400 rounded-full animate-[bounce_1s_infinite_100ms]" style={{ height: '30%' }} />
+                      <span className="w-[2px] bg-indigo-400 rounded-full animate-[bounce_1s_infinite_400ms]" style={{ height: '80%' }} />
+                      <span className="w-[2px] bg-indigo-400 rounded-full animate-[bounce_1s_infinite_200ms]" style={{ height: '50%' }} />
+                      <span className="w-[2px] bg-indigo-400 rounded-full animate-[bounce_1s_infinite_650ms]" style={{ height: '90%' }} />
                     </div>
                   ) : (
                     <Disc className="h-4 w-4 text-white/20 animate-[spin_5s_linear_infinite]" />
@@ -238,9 +253,10 @@ export default function HomeView({
             </div>
 
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
       )}
+      </AnimatePresence>
 
       {/* 2b. Dynamics: Audios Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in" id="home-featured-audios">
@@ -265,77 +281,91 @@ export default function HomeView({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Audio selection widget list */}
             <div className="space-y-4 text-left" id="home-audios-list">
-              {featuredTracks.length === 0 ? (
-                <p className="text-white/40 text-xs font-mono py-8">No audio tracks available yet.</p>
-              ) : featuredTracks.map((track) => {
-                const isSelected = isPlaying && activeTrackId === track.id;
-                return (
-                  <div
-                    key={track.id}
-                    id={`home-track-row-${track.id}`}
-                    className={`flex items-center justify-between p-4 border border-white/5 bg-black/25 hover:bg-white/5 transition-all duration-300 ${
-                      isSelected ? 'border-white/15 bg-white/5' : ''
-                    }`}
-                  >
-                    <div className="flex items-center space-x-4 min-w-0">
-                      <div className="relative group/cover w-12 h-12 flex-shrink-0 bg-black overflow-hidden border border-white/10">
-                        <img
-                          src={track.coverUrl}
-                          alt={track.albumTitle}
-                          className="w-full h-full object-cover grayscale"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all">
-                          <button
-                            onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
-                            className="p-1 rounded-full bg-white text-black cursor-pointer"
-                          >
-                            {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
-                          </button>
+              <AnimatePresence>
+                {featuredTracks.length === 0 ? (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-white/40 text-xs font-mono py-8">No audio tracks available yet.</motion.p>
+                ) : featuredTracks.map((track) => {
+                  const isSelected = isPlaying && activeTrackId === track.id;
+                  return (
+                    <motion.div
+                      key={track.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      id={`home-track-row-${track.id}`}
+                      style={{ rotateX: velocityRotate, skewY: velocitySkew, transformPerspective: 1000 }}
+                      className={`flex items-center justify-between p-4 border border-white/5 bg-black/25 hover:bg-indigo-900/10 transition-all duration-300 group/row ${
+                        isSelected ? 'border-white/15 bg-white/5' : ''
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4 min-w-0 transition-transform group-hover/row:translate-x-1">
+                        <div className="relative group/cover w-12 h-12 flex-shrink-0 bg-black overflow-hidden border border-white/10">
+                          <img
+                            src={track.coverUrl}
+                            alt={track.albumTitle}
+                            className="w-full h-full object-cover grayscale"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all">
+                            <button
+                              onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
+                              className="p-1 rounded-full bg-white text-black cursor-pointer"
+                            >
+                              {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium tracking-wide uppercase truncate ${activeTrackId === track.id ? 'text-white' : 'text-white/85'}`}>
+                            {track.title}
+                          </p>
+                          <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider mt-0.5 truncate">
+                            {track.albumTitle}
+                          </p>
                         </div>
                       </div>
-                      
-                      <div className="min-w-0">
-                        <p className={`text-sm font-medium tracking-wide uppercase truncate ${activeTrackId === track.id ? 'text-white' : 'text-white/85'}`}>
-                          {track.title}
-                        </p>
-                        <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider mt-0.5 truncate">
-                          {track.albumTitle}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center space-x-4 flex-shrink-0">
-                      <span className="text-[10px] text-white/30 font-mono tracking-wider hidden sm:inline-block">
-                        {track.plays} plays
-                      </span>
-                      <span className="text-white/10 font-mono text-xs hidden sm:inline-block">|</span>
-                      <span className="text-[10px] text-white/40 font-mono tracking-wider w-8 text-right">
-                        {track.duration}
-                      </span>
-                      
-                      <button
-                        id={`home-track-play-${track.id}`}
-                        onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
-                        className={`p-2.5 rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all ${
-                          isSelected ? 'bg-white text-black border border-white' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-                        }`}
-                      >
-                        {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                      <div className="flex items-center space-x-4 flex-shrink-0">
+                        <span className="text-[10px] text-white/30 font-mono tracking-wider hidden sm:inline-block">
+                          {track.plays} plays
+                        </span>
+                        <span className="text-white/10 font-mono text-xs hidden sm:inline-block">|</span>
+                        <span className="text-[10px] text-white/40 font-mono tracking-wider w-8 text-right">
+                          {track.duration}
+                        </span>
+                        
+                        <button
+                          id={`home-track-play-${track.id}`}
+                          onClick={() => (isPlaying && activeTrackId === track.id) ? onPauseTrack() : onPlayTrack(track.id)}
+                          className={`p-2.5 rounded-full cursor-pointer hover:scale-105 active:scale-95 transition-all ${
+                            isSelected ? 'bg-white text-black border border-white' : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+                          }`}
+                        >
+                          {isSelected ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3 fill-current ml-0.5" />}
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
 
             {/* Poetic Quote & Stylized Vinyl Art display */}
-            <div className="bg-[#050505] border border-white/5 rounded-none p-6 flex flex-col justify-between text-left relative overflow-hidden" id="home-audio-promo-art">
-              <div className="absolute -right-16 -bottom-16 w-48 h-48 rounded-full border border-white/5 animate-[spin_40s_linear_infinite] flex items-center justify-center pointer-events-none opacity-30">
-                <Disc className="h-32 w-32 text-white/50" />
+            <motion.div 
+              style={{ rotateX: velocityRotate, skewY: velocitySkew, transformPerspective: 1000 }}
+              className="bg-[#050505] border border-white/5 rounded-none p-6 flex flex-col justify-between text-left relative overflow-hidden" 
+              id="home-audio-promo-art"
+            >
+              <div className="absolute -right-16 -bottom-16 w-48 h-48 rounded-full border border-indigo-500/10 animate-[spin_40s_linear_infinite] flex items-center justify-center pointer-events-none opacity-30">
+                <Disc className="h-32 w-32 text-indigo-400/50" />
               </div>
               <div className="space-y-4 max-w-sm select-none z-10">
-                <Music className="h-5 w-5 text-white/30" />
+                <Music className="h-5 w-5 text-indigo-400/50" />
                 <p className="text-white/60 text-sm italic font-serif leading-relaxed">
                   "Music resides in the spaces we leave empty. These tracks are stories shaped over quiet nights, warm fires, and copper strings."
                 </p>
@@ -347,12 +377,12 @@ export default function HomeView({
 
               <div className="pt-8 border-t border-white/5 mt-auto flex items-center justify-between text-[10px] font-mono text-white/40 uppercase tracking-widest z-10">
                 <div className="flex items-center space-x-2">
-                  <div className="h-2 w-2 rounded-full bg-white animate-ping" />
+                  <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
                   <span>Synthesizer engine active</span>
                 </div>
                 <span>Analog Stereo Mapping</span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -393,7 +423,7 @@ export default function HomeView({
                   <img
                     src={video.thumbnailUrl}
                     alt={video.title}
-                    className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                    className="w-full h-full object-cover brightness-75 group-hover:brightness-100 group-hover:scale-105 transition-all duration-700"
                     referrerPolicy="no-referrer"
                   />
                   
@@ -402,7 +432,7 @@ export default function HomeView({
                     <button
                       id={`play-home-v-${video.id}`}
                       onClick={() => handleOpenVideo(video)}
-                      className="p-3.5 rounded-full bg-white text-black scale-90 group-hover:scale-105 opacity-95 group-hover:opacity-100 shadow-xl transition-all cursor-pointer"
+                      className="p-3.5 rounded-full bg-indigo-600 text-white scale-90 group-hover:scale-105 opacity-95 group-hover:opacity-100 shadow-xl transition-all cursor-pointer"
                     >
                       <Play className="h-4 w-4 fill-current ml-0.5" />
                     </button>
@@ -440,11 +470,11 @@ export default function HomeView({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           <div className="lg:col-span-5 order-2 lg:order-1">
-            <div className="relative max-w-md mx-auto aspect-[3/4] rounded-none overflow-hidden grayscale hover:grayscale-0 transition-all duration-700 border border-white/10 shadow-2xl">
+            <div className="relative max-w-md mx-auto aspect-[3/4] rounded-none overflow-hidden transition-all duration-700 border border-white/10 shadow-2xl group">
               <img
                 src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=800"
                 alt="Aria Vance Portrait Shot"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover brightness-90 group-hover:brightness-110 transition-all duration-700"
                 referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-6 left-6 right-6 p-4 rounded-none bg-black/85 border border-white/10 backdrop-blur-md">
